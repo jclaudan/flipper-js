@@ -1,0 +1,107 @@
+# FlipperHTTP Module Documentation
+
+## Overview
+The FlipperHTTP module enables JavaScript scripts to make HTTP requests, manage WiFi connections, and interact with web services directly from the Flipper Zero. This module requires the FlipperHTTP firmware to be flashed on the Flipper Zero.
+
+## Prerequisites
+- FlipperHTTP firmware must be flashed on the Flipper Zero
+- WiFi Devboard or WiFi capability enabled
+- Serial connection via USART (pins 13 TX, 14 RX)
+
+## Module Functions
+
+### Initialization & Connection
+| **Function** | **Return** | **Parameters** | **Description** |
+|--------------|------------|----------------|-----------------|
+| `fhttp.init()` | `void` | None | Initializes serial connection (USART, 115200 baud) |
+| `fhttp.deinit()` | `void` | None | Closes serial connection |
+| `fhttp.ping()` | `bool` | None | Tests connectivity to FlipperHTTP board |
+
+### WiFi Management
+| **Function** | **Return** | **Parameters** | **Description** |
+|--------------|------------|----------------|-----------------|
+| `fhttp.connect_wifi()` | `bool` | None | Connects to saved WiFi network |
+| `fhttp.disconnect_wifi()` | `bool` | None | Disconnects from WiFi |
+| `fhttp.scan_wifi()` | `string` | None | Scans for available WiFi networks |
+| `fhttp.save_wifi(ssid, password)` | `bool` | `ssid: string`, `password: string` | Saves WiFi credentials |
+| `fhttp.ip_wifi()` | `string` | None | Gets WiFi network IP address |
+| `fhttp.ip_address()` | `string` | None | Gets FlipperHTTP board IP address |
+
+### HTTP Requests
+| **Function** | **Return** | **Parameters** | **Description** |
+|--------------|------------|----------------|-----------------|
+| `fhttp.get_request(url)` | `string` | `url: string` | Sends GET request to URL |
+| `fhttp.get_request_with_headers(url, headers)` | `string` | `url: string`, `headers: string` | GET request with custom headers |
+| `fhttp.post_request_with_headers(url, headers, payload)` | `string` | `url: string`, `headers: string`, `payload: string` | POST request with headers and data |
+| `fhttp.put_request_with_headers(url, headers, payload)` | `string` | `url: string`, `headers: string`, `payload: string` | PUT request with headers and data |
+| `fhttp.delete_request_with_headers(url, headers, payload)` | `string` | `url: string`, `headers: string`, `payload: string` | DELETE request with headers and data |
+
+### WebSocket Support
+| **Function** | **Return** | **Parameters** | **Description** |
+|--------------|------------|----------------|-----------------|
+| `fhttp.websocket_start(url, port, headers)` | `bool` | `url: string`, `port: number`, `headers: string` | Starts WebSocket connection |
+| `fhttp.websocket_stop()` | `bool` | None | Stops WebSocket connection |
+
+### Utility Functions
+| **Function** | **Return** | **Parameters** | **Description** |
+|--------------|------------|----------------|-----------------|
+| `fhttp.parse_json(key, data)` | `string` | `key: string`, `data: string` | Parses JSON data for specified key |
+| `fhttp.parse_json_array(key, index, data)` | `string` | `key: string`, `index: number`, `data: string` | Parses JSON array element |
+| `fhttp.list_commands()` | `string` | None | Lists all available commands |
+| `fhttp.led_on()` | `void` | None | Enables LED during processing |
+| `fhttp.led_off()` | `void` | None | Disables LED during processing |
+
+## Usage Examples
+
+### Basic HTTP Request
+```javascript
+let fhttp = require("flipper_http");
+fhttp.init();
+if (fhttp.ping()) {
+    let response = fhttp.get_request("https://api.example.com/data");
+    print("Response: " + response);
+}
+fhttp.deinit();
+```
+
+### WiFi Connection
+```javascript
+let fhttp = require("flipper_http");
+fhttp.init();
+if (fhttp.save_wifi("MyNetwork", "password123")) {
+    if (fhttp.connect_wifi()) {
+        let ip = fhttp.ip_wifi();
+        print("Connected! IP: " + ip);
+    }
+}
+fhttp.deinit();
+```
+
+### JSON API Request
+```javascript
+let fhttp = require("flipper_http");
+fhttp.init();
+let headers = '{"Content-Type":"application/json"}';
+let response = fhttp.get_request_with_headers("https://api.github.com/user", headers);
+let username = fhttp.parse_json("login", response);
+print("Username: " + username);
+fhttp.deinit();
+```
+
+## Important Notes
+- Headers must be in JSON format: '{"Content-Type":"application/json","Authorization":"Bearer token"}'
+- Payloads for POST/PUT/DELETE must be valid JSON strings
+- Response data is limited by mJS memory constraints
+- Always call `fhttp.deinit()` when done to close serial connection
+- WiFi credentials are saved persistently on the FlipperHTTP board
+- WebSocket connections require proper URL format: "ws://hostname:port/path"
+
+## Error Handling
+- Functions return `false` or empty strings on failure
+- Check return values before processing responses
+- Use `fhttp.list_commands()` to verify board communication
+- Monitor serial output for detailed error messages
+
+## Compatible Firmware
+- FlipperHTTP: https://github.com/jblanked/FlipperHTTP
+- Requires USART pins (13 TX, 14 RX) for communication
